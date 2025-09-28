@@ -5,110 +5,93 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ShortLink & Image Page</title>
   <style>
-    :root{font-family:Inter,system-ui,Arial;margin:0;padding:0;color:#111}
-    body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(180deg,#f7f9fc,#eef3fb);}
-    .card{width:940px;max-width:94%;background:white;border-radius:12px;padding:28px;box-shadow:0 8px 30px rgba(18,38,63,0.08)}
-    header{display:flex;justify-content:space-between;align-items:center}
-    h1{margin:0;font-size:22px}
-    .lang-toggle{padding:8px 12px;border-radius:8px;border:1px solid #e6eef8;background:#fff;cursor:pointer}
-    .hero{display:flex;gap:22px;margin-top:18px;flex-wrap:wrap}
-    .left{flex:1;min-width:260px}
-    .right{width:340px;max-width:100%}
-    img.preview{width:100%;height:auto;max-height:240px;object-fit:contain;border-radius:10px;border:1px solid #f0f4fb;background:#fafafa}
-    .meta{margin-top:12px}
-    .meta input[type=text]{width:100%;padding:10px;border-radius:8px;border:1px solid #e2e8f0}
-    .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-    button{padding:10px 12px;border-radius:8px;border:none;background:#0b76ef;color:white;cursor:pointer}
-    button.secondary{background:#f0f4f8;color:#07203b}
-    .short-output{margin-top:12px;padding:10px;border-radius:8px;background:#fbfdff;border:1px dashed #e6f0ff}
-    .small{font-size:13px;color:#556}
-    footer{margin-top:18px;font-size:13px;color:#445}
-    .title-edit{display:flex;gap:8px;align-items:center}
-    .title-edit input{font-size:18px;padding:8px;border-radius:8px;border:1px solid #e7eefb;width:100%}
+    body { font-family: Arial, sans-serif; background:#f5f7fa; margin:0; padding:20px; }
+    .container { max-width:700px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+    h1 { text-align:center; }
+    input[type=text] { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:8px; }
+    button { padding:10px 16px; margin:4px; border:none; border-radius:8px; cursor:pointer; }
+    button.primary { background:#0b76ef; color:#fff; }
+    button.secondary { background:#eaeef3; }
+    img { max-width:100%; height:auto; margin-top:10px; border-radius:8px; border:1px solid #ddd; }
+    .short { margin-top:10px; padding:10px; background:#f0f7ff; border:1px dashed #ccc; border-radius:8px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <header>
-      <h1 id="pageTitle">ShortLink & Image Page</h1>
-      <div>
-        <button class="lang-toggle" id="toggleLang">English</button>
-      </div>
-    </header>
+  <div class="container">
+    <h1 id="pageTitle">ShortLink & Image Page</h1>
 
-    <div class="hero">
-      <div class="left">
-        <div class="title-edit">
-          <input id="titleInput" placeholder="Enter title here" value="My Example Title">
-          <button class="secondary" id="applyTitle">Apply</button>
-        </div>
+    <label>Page Title:</label>
+    <input type="text" id="titleInput" value="My Example Title">
+    <button class="secondary" onclick="setTitle()">Apply Title</button>
 
-        <div class="meta">
-          <p class="small" id="desc">Add an image, add a title and create a short link easily. Use the language toggle to switch to English.</p>
+    <label>Image URL:</label>
+    <input type="text" id="imageUrl" value="https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg" oninput="liveImageChange()">
+    <img id="previewImage" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg" alt="Preview">
 
-          <label class="small" for="imageUrl">Image URL</label>
-          <input type="text" id="imageUrl" value="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png">
-          <div class="row">
-            <button id="applyImage">Add / Update Image</button>
-            <button id="resetImage" class="secondary">Reset Image</button>
-          </div>
+    <hr>
 
-          <hr style="margin:14px 0;border:none;border-top:1px solid #eef3fb">
-
-          <label class="small" for="originalUrl">URL to shorten</label>
-          <input type="text" id="originalUrl" placeholder="https://example.com/article" />
-          <div class="row">
-            <button id="shortenBtn">Shorten</button>
-            <button id="copyBtn" class="secondary">Copy Short URL</button>
-          </div>
-
-          <div class="short-output" id="shortOutput" style="display:none">
-            <div><strong id="shortLabel"></strong></div>
-            <div class="small" id="shortHelp">This short link uses browser storage; to make it live on the web host it on a static domain.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="right">
-        <img id="previewImage" class="preview" src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="Preview">
-        <p class="small" style="margin-top:10px">Preview of the selected image and page title.</p>
-      </div>
-    </div>
-
-    <footer>
-      <div class="small">Tip: Save this HTML as a file and open it in a browser or host on GitHub Pages / Netlify to make it available online.</div>
-    </footer>
+    <label>Enter URL to shorten:</label>
+    <input type="text" id="originalUrl" placeholder="https://example.com">
+    <button class="primary" onclick="shorten()">Shorten</button>
+    <button class="secondary" onclick="copyShort()">Copy</button>
+    <div id="shortOutput" class="short" style="display:none"></div>
   </div>
 
   <script>
-    const storageKey = 'simple_shortlinks_v1';
-    function loadLinks(){ try{ return JSON.parse(localStorage.getItem(storageKey) || '{}'); }catch(e){return {}}}
-    function saveLinks(obj){ localStorage.setItem(storageKey, JSON.stringify(obj)); }
-    function genId(len=6){ const chars='abcdefghijklmnopqrstuvwxyz0123456789'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+    // --- Title Function ---
+    function setTitle(){
+      const t = document.getElementById("titleInput").value;
+      document.getElementById("pageTitle").textContent = t || "ShortLink & Image Page";
+      document.title = t;
+    }
 
-    (function handleRedirect(){
-      const h = location.hash || '';
-      if(h.startsWith('#s/')){
-        const id = h.slice(3);
+    // --- Live Image Preview ---
+    function liveImageChange(){
+      const url = document.getElementById("imageUrl").value.trim();
+      const img = document.getElementById("previewImage");
+      img.src = url;
+      img.onerror = ()=>{ 
+        img.src = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg";
+      };
+    }
+
+    // --- Short Link Functions ---
+    const key = "short_links_db";
+    function loadLinks(){ return JSON.parse(localStorage.getItem(key) || "{}"); }
+    function saveLinks(data){ localStorage.setItem(key, JSON.stringify(data)); }
+    function genId(){ return Math.floor(100000 + Math.random() * 900000); } // always 6-digit unique number
+
+    function shorten(){
+      const url = document.getElementById("originalUrl").value.trim();
+      if(!url){ alert("Enter a URL first."); return; }
+      let links = loadLinks();
+      let id = genId();
+      while(links[id]){ id = genId(); } // ensure unique
+      links[id] = url;
+      saveLinks(links);
+      const short = location.origin + location.pathname + "#s/" + id;
+      document.getElementById("shortOutput").style.display="block";
+      document.getElementById("shortOutput").textContent = short;
+    }
+
+    function copyShort(){
+      const txt = document.getElementById("shortOutput").textContent;
+      if(!txt){ alert("No short link yet."); return; }
+      navigator.clipboard.writeText(txt).then(()=>alert("Copied!"));
+    }
+
+    // --- Redirect if visiting #s/xxx ---
+    (function(){
+      if(location.hash.startsWith("#s/")){
+        const id = location.hash.replace("#s/","");
         const links = loadLinks();
-        if(links[id]){ window.location.href = links[id]; }
-        else { alert('Short link not found in browser storage.'); }
+        if(links[id]) location.href = links[id];
+        else alert("Short link not found in this browser.");
       }
     })();
-
-    const originalUrl = document.getElementById('originalUrl');
-    const shortenBtn = document.getElementById('shortenBtn');
-    const shortOutput = document.getElementById('shortOutput');
-    const shortLabel = document.getElementById('shortLabel');
-    const copyBtn = document.getElementById('copyBtn');
-    const imageUrl = document.getElementById('imageUrl');
-    const previewImage = document.getElementById('previewImage');
-    const applyImage = document.getElementById('applyImage');
-    const resetImage = document.getElementById('resetImage');
-    const titleInput = document.getElementById('titleInput');
-    const applyTitle = document.getElementById('applyTitle');
-    const pageTitle = document.getElementById('pageTitle');
-    const desc = document.getElementById('desc');
+  </script>
+</body>
+</html>
     const toggleLang = document.getElementById('toggleLang');
 
     const texts = {
